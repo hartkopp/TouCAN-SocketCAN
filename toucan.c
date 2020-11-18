@@ -523,9 +523,7 @@ static void toucan_rx_can_msg(struct toucan_usb_priv *priv,
 			return;
 
 		cf->can_id = be32_to_cpu(msg->id);
-		cf->len = can_get_cc_len(msg->dlc);
-		cf->len8_dlc = can_get_len8_dlc(priv->can.ctrlmode,
-						cf->len, msg->dlc);
+		can_frame_set_cc_len(cf, msg->dlc, priv->can.ctrlmode);
 
 		if (msg->flags & TOUCAN_MSG_FLG_EXTID)
 			cf->can_id |= CAN_EFF_FLAG;
@@ -575,7 +573,7 @@ static void toucan_tx_usb_pkt(struct sk_buff *skb, void *buf, u32 ctrlmode)
 		msg->flags |= TOUCAN_MSG_FLG_EXTID;
 
 	msg->id = cpu_to_be32(cf->can_id & CAN_ERR_MASK);
-	msg->dlc = can_get_cc_dlc(ctrlmode, cf->len, cf->len8_dlc);
+	msg->dlc = can_get_cc_dlc(cf, ctrlmode);
 	memcpy(msg->data, cf->data, cf->len);
 }
 
